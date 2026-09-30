@@ -14,28 +14,181 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <header class="navbar">
+<header class="navbar">
+    <div class="container nav-container">
 
-        <div class="container nav-container">
+        <a href="index.html" class="logo">
+            Career<span>Find</span>
+        </a>
 
-            <a href="index.html" class="logo">
-                Career<span>Find</span>
-            </a>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="jobs.html" class="active">Latest Jobs</a>
+        </nav>
 
-            <nav class="nav-links">
+    </div>
+</header>
 
-                <a href="index.html">
-                    Home
-                </a>
+<main>
 
-                <a href="jobs.html" class="active">
-                    Latest Jobs
-                </a>
+    <section class="page-hero">
+        <div class="container">
+            <h1>Latest Jobs</h1>
+            <p>Find the latest job opportunities and start your career.</p>
+        </div>
+    </section>
 
-                <a href="#">
-                   
+    <section class="jobs-section">
+        <div class="container">
+
+            <div class="job-search">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search jobs, companies or locations..."
+                >
+            </div>
+
+            <div id="jobsContainer">
+                <p>Loading latest jobs...</p>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 CareerFind. All Rights Reserved.</p>
+    </div>
+</footer>
+
+<script>
+    const SUPABASE_URL = "https://mglnneduufkrzzspuukm.supabase.co";
+
+    const SUPABASE_KEY = "sb_publishable_GhXAvfXYHfd-CaYC03lFBg_MQxOuU6Y";
+
+    const supabaseClient = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+    const jobsContainer = document.getElementById("jobsContainer");
+    const searchInput = document.getElementById("searchInput");
+
+    let allJobs = [];
+
+    async function loadJobs() {
+
+        jobsContainer.innerHTML = "<p>Loading latest jobs...</p>";
+
+        const { data, error } = await supabaseClient
+            .from("jobs")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            console.error(error);
+            jobsContainer.innerHTML =
+                "<p>Unable to load jobs. Please try again later.</p>";
+            return;
+        }
+
+        allJobs = data || [];
+        displayJobs(allJobs);
+    }
+
+    function displayJobs(jobs) {
+
+        if (jobs.length === 0) {
+            jobsContainer.innerHTML =
+                "<p>No jobs found.</p>";
+            return;
+        }
+
+        jobsContainer.innerHTML = jobs.map(job => `
+
+            <article class="job-card">
+
+                <div class="job-card-content">
+
+                    <span class="job-category">
+                        ${escapeHTML(job.category || "Jobs")}
+                    </span>
+
+                    <h2>${escapeHTML(job.title || "Job Opportunity")}</h2>
+
+                    <p class="company">
+                        ${escapeHTML(job.company || "")}
+                    </p>
+
+                    <p>
+                        📍 ${escapeHTML(job.location || "Location not specified")}
+                    </p>
+
+                    <p>
+                        💰 ${escapeHTML(job.salary || "Salary not specified")}
+                    </p>
+
+                    <p>
+                        🎓 ${escapeHTML(job.qualification || "Not specified")}
+                    </p>
+
+                    <p>
+                        💼 ${escapeHTML(job.job_type || "Not specified")}
+                    </p>
+
+                    <a
+                        class="btn"
+                        href="pages/job-details.html?id=${encodeURIComponent(job.id)}"
+                    >
+                        View Job Details
+                    </a>
+
+                </div>
+
+            </article>
+
+        `).join("");
+    }
+
+    function escapeHTML(value) {
+        return String(value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    searchInput.addEventListener("input", function () {
+
+        const search = this.value.toLowerCase().trim();
+
+        const filteredJobs = allJobs.filter(job => {
+
+            return (
+                (job.title || "").toLowerCase().includes(search) ||
+                (job.company || "").toLowerCase().includes(search) ||
+                (job.location || "").toLowerCase().includes(search) ||
+                (job.category || "").toLowerCase().includes(search)
+            );
+
+        });
+
+        displayJobs(filteredJobs);
+    });
+
+    loadJobs();
+</script>
+
+</body>
+</html>
